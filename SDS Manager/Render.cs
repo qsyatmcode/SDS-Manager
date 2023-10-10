@@ -21,288 +21,33 @@ namespace SDSManager
 		private readonly Window _leftWindow;
 		private readonly Window _rightWindow;
 
-		public void Draw(DirectoryInfo currentDirectory, ConsoleKey pressedKey)
+		public void Draw()
 		{
 			Console.Clear();
 			
+			/* TODO: РАЗДЕЛИТЬ ВВОД (ОБРАБОТКА НАЖАТОЙ КЛАВИШИ И ПОСЛЕДЮЩИЕ ДЕЙСТВИЯ) И ВЫВОД (МЕТОДЫ С ПРИСТАВКОЙ DRAW)
+				Нужно поместить обработку ввода в отдельный класс, и сделать всё максимально гибким и расширяемым.
+			*/
 			DrawWindows();
-			//DrawHelp();
-			DrawContent(pressedKey);
-			//DrawWindows();
+
+			DrawContent();
 		}
 
-		private int _selectedIndex = 0;
-		private void DrawContent(ConsoleKey pressedKey)
+		private void DrawContent()
 		{
 			Window[] windows = new Window[2] { _leftWindow, _rightWindow };
 
 			foreach (var window in windows)
 			{
 				
-				DrawWindowsContent(window, pressedKey);
+				DrawWindowsContent(window);
 				
 			}
 		}
 
-		private void DrawWindowsContent(Window window, ConsoleKey pressedKey)
+		private void DrawWindowsContent(Window window)
 		{
-			int leftContentDrawPadding = window.LeftPadding;
-
-			int topPos = window.TopPadding; // Draw top pos
-
-			if (window.ContentType == WindowContentType.Drives)
-			{
-				if (pressedKey == ConsoleKey.DownArrow)
-				{
-					GetOtherWindow(window).ContentType = WindowContentType.FileInfo;
-					_selectedIndex++;
-				}
-				else if (pressedKey == ConsoleKey.UpArrow)
-				{
-					GetOtherWindow(window).ContentType = WindowContentType.FileInfo;
-					_selectedIndex--;
-				}
-
-				if (_selectedIndex < 0)
-				{
-					_selectedIndex = 100;
-				}
-				else if (_selectedIndex > 110)
-				{
-					_selectedIndex = 0;
-				}
-
-
-
-				string[] drives = Environment.GetLogicalDrives();
-
-				int selectedIndex = _selectedIndex % drives.Length;
-
-				for (int i = 0; i < drives.Length; i++)
-				{
-					Console.SetCursorPosition(leftContentDrawPadding, topPos);
-
-					if (selectedIndex == i)
-					{
-						window.SelectedFolder = new DirectoryInfo(drives[i]);
-						Console.ForegroundColor = _selectedItemColor;
-						Console.BackgroundColor = _windowsBackgroundColor;
-
-						InputProcessing(pressedKey, window, drives[i]);
-					}
-					else
-					{
-						Console.ForegroundColor = _foldersColor;
-						Console.BackgroundColor = _windowsBackgroundColor;
-					}
-
-					Console.Write(drives[i]); // WRITE?
-
-					topPos++;
-				}
-
-				Console.SetCursorPosition(0, Console.WindowHeight - 1);
-				Console.Write($"\tsI: {selectedIndex} | _sI: {_selectedIndex} {pressedKey} {window.ContentType}");
-				Console.ResetColor();
-				return;
-
-			}else if (window.ContentType == WindowContentType.Directory)
-			{
-				Console.BackgroundColor = _windowsBackgroundColor;
-				if (pressedKey == ConsoleKey.DownArrow)
-				{
-					_selectedIndex++;
-					GetOtherWindow(window).ContentType = WindowContentType.FileInfo;
-				}
-				else if (pressedKey == ConsoleKey.UpArrow)
-				{
-					_selectedIndex--;
-					GetOtherWindow(window).ContentType = WindowContentType.FileInfo;
-				}
-
-				if (_selectedIndex < 0)
-				{
-					_selectedIndex = 100;
-				}
-				else if (_selectedIndex > 110)
-				{
-					_selectedIndex = 0;
-				}
-
-				int contentIndex = 0; //index of item in current directory
-
-				// DIRECTORY INFO:
-				if ((window.CurrentDirectory.GetDirectories().Length + window.CurrentDirectory.GetFiles().Length) == 0)
-				{
-					Console.SetCursorPosition(leftContentDrawPadding, topPos);
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.Write("EMPTY");
-
-					InputProcessing(pressedKey, window, null);
-					return;
-				}
-				int selectedIndex = _selectedIndex % (window.CurrentDirectory.GetDirectories().Length +
-				                                      window.CurrentDirectory.GetFiles().Length);
-				//SUBDIRS DRAW
-				var dirs = window.CurrentDirectory.GetDirectories();
-				for (int i = 0; i < dirs.Length; i++)
-				{
-					Console.SetCursorPosition(leftContentDrawPadding, topPos);
-					Console.ForegroundColor = _foldersColor;
-
-					if (selectedIndex == contentIndex)
-					{
-						window.SelectedFolder = dirs[i];
-						Console.ForegroundColor = _selectedItemColor;
-
-						InputProcessing(pressedKey, window, dirs[i].FullName);
-					}
-
-					int trimSymbolsCount = dirs[i].Name.Length - window.Width;
-					if (trimSymbolsCount > 0)
-						Console.Write($"{contentIndex}." +
-						              dirs[i].Name.Remove(dirs[i].Name.Length - trimSymbolsCount,
-							              trimSymbolsCount)); // WRITE?
-					else
-						Console.Write($"{contentIndex}." + dirs[i].Name); // WRITE?
-
-					topPos++;
-					contentIndex++;
-				}
-
-				//FILES DRAW
-				var files = window.CurrentDirectory.GetFiles();
-				for (int i = 0; i < files.Length; i++)
-				{
-
-					Console.SetCursorPosition(leftContentDrawPadding, topPos);
-					Console.ForegroundColor = _filesColor;
-
-					if (selectedIndex == contentIndex)
-					{
-						window.SelectedFile = files[i];
-						Console.ForegroundColor = _selectedItemColor;
-
-						InputProcessing(pressedKey, window, null);
-					}
-
-					int trimSymbolsCount = files[i].Name.Length - window.Width;
-					if (trimSymbolsCount > 0)
-						Console.Write($"{contentIndex}." +
-						              files[i].Name.Remove(files[i].Name.Length - trimSymbolsCount,
-							              trimSymbolsCount)); // WRITE?
-					else
-						Console.Write($"{contentIndex}." + files[i].Name); // WRITE?
-
-					topPos++;
-					contentIndex++;
-				}
-
-				Console.SetCursorPosition(0, Console.WindowHeight - 1);
-				Console.Write("\tsI:" + selectedIndex.ToString() + "| _sI:" + _selectedIndex.ToString() + " " + pressedKey.ToString() + " " + window.ContentType.ToString());
-				Console.ResetColor();
-
-				
-
-				return;
-			}else if (window.ContentType == WindowContentType.FileInfo)
-			{
-				Console.SetCursorPosition(leftContentDrawPadding, topPos);
-				topPos++;
-				Console.Write("FILE INFO TEST VERSION:");
-
-				Window otherWindow;
-				if (window == _leftWindow)
-					otherWindow = _rightWindow;
-				else
-					otherWindow = _leftWindow;
-
-				if (otherWindow.SelectedFile != null)
-				{
-					//TODO:
-					const int countOfData = 5;
-					string[] DataOfFile = new string[countOfData]
-					{
-						otherWindow.SelectedFile.Name,
-						otherWindow.SelectedFile.Length.ToString(),
-						otherWindow.SelectedFile.DirectoryName,
-						otherWindow.SelectedFile.Name,
-						otherWindow.SelectedFile.IsReadOnly.ToString()
-					};
-
-					for (int i = 0; i < countOfData; i++)
-					{
-						Console.SetCursorPosition(leftContentDrawPadding, topPos);
-
-						Console.Write(DataOfFile[i]);
-
-						topPos++;
-					}
-
-					Console.ResetColor();
-					Console.SetCursorPosition(0, Console.WindowHeight - 1);
-					Console.Write("0 |" + _selectedIndex.ToString() + pressedKey.ToString() + window.ContentType.ToString());
-					return;
-				}else if (otherWindow.SelectedFolder != null)
-				{
-					const int countOfData = 3;
-					string[] DataOfFile = new string[countOfData]
-					{
-						otherWindow.SelectedFolder.Name,
-						otherWindow.SelectedFolder.FullName,
-						otherWindow.SelectedFolder.Name
-					};
-
-					for (int i = 0; i < countOfData; i++)
-					{
-						Console.SetCursorPosition(leftContentDrawPadding, topPos);
-
-						Console.Write(DataOfFile[i]);
-
-						topPos++;
-					}
-
-					Console.ResetColor();
-					Console.SetCursorPosition(0, Console.WindowHeight - 1);
-					Console.Write("\t"+ "| _sI:" + _selectedIndex.ToString() + " " + pressedKey.ToString() + " " + window.ContentType.ToString());
-					return;
-				}
-			}else if (window.ContentType == WindowContentType.TextView)
-			{
-				if (window.SelectedFile == null)
-				{
-					return;
-				}
-				Window otherWindow = GetOtherWindow(window);
-
-				if (otherWindow.SelectedFile == null)
-				{
-					return;
-				}
-				string[] lines = File.ReadAllLines(otherWindow.SelectedFile.FullName); // may be null
-
-				//int leftPadding = otherWindow.LeftPadding;
-				int countOfLines = otherWindow.TopPadding + otherWindow.Height;
-				int maxLineLength = otherWindow.Width;
-
-				foreach (var line in lines)
-				{
-					if (topPos - window.TopPadding > countOfLines)
-					{
-						break;
-					}
-					Console.SetCursorPosition(leftContentDrawPadding, topPos);
-					Console.ForegroundColor = _selectedItemColor;
-					Console.BackgroundColor = _windowsBackgroundColor;
-
-					int trimSymbolsCount = line.Length - maxLineLength;
-					Console.Write(line.Remove(line.Length - trimSymbolsCount, trimSymbolsCount));
-
-					topPos++;
-				}
-
-				return;
-			}
+			
 		}
 
 		private Window GetOtherWindow(Window window)
@@ -312,48 +57,6 @@ namespace SDSManager
 				return _rightWindow;
 			else
 				return _leftWindow;
-		}
-
-		private void InputProcessing(ConsoleKey pressedKey, Window window, string? enterPath)
-		{
-			if (pressedKey == ConsoleKey.Enter || pressedKey == ConsoleKey.RightArrow)
-			{
-				if (enterPath == null) // If it is not a directory, but a file
-				{
-					Window otherWindow;
-					if (window == _leftWindow)
-					{
-						otherWindow = _rightWindow;
-					}
-					else
-					{
-						otherWindow = _leftWindow;
-					}
-
-					otherWindow.ContentType = WindowContentType.TextView;
-
-					return;
-				}
-				window.PrevDirectories.Add(window.CurrentDirectory);
-				window.CurrentDirectory = new DirectoryInfo(enterPath);
-				if(window.ContentType != WindowContentType.Directory) window.ContentType = WindowContentType.Directory;
-			}
-			else if (pressedKey == ConsoleKey.Backspace || pressedKey == ConsoleKey.LeftArrow)
-			{
-				if (window.PrevDirectories.Count == 0)
-				{
-					window.ContentType = WindowContentType.Drives;
-				}
-				else
-				{
-					window.CurrentDirectory = window.PrevDirectories.Last();
-					window.PrevDirectories.RemoveAt(window.PrevDirectories.Count - 1);
-				}
-			}
-			else
-			{
-				// No control key is pressed
-			}
 		}
 
 		private void DrawWindows()
