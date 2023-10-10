@@ -12,7 +12,9 @@
 				ConsoleColor.DarkBlue,
 				ConsoleColor.Red,
 				ConsoleColor.Yellow,
-				ConsoleColor.White
+				ConsoleColor.White,
+				ConsoleColor.DarkCyan,
+				ConsoleColor.Black
 				);
 
 			DirectoryInfo currentDirectory = new DirectoryInfo(Environment.CurrentDirectory);
@@ -22,7 +24,7 @@
 			bool flag = false;
 			while (true)
 			{
-				render.Draw(currentDirectory, pressedKey);
+				render.Draw();
 
 				pressedKey = Console.ReadKey().Key;
 

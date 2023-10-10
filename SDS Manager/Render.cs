@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -17,6 +18,8 @@ namespace SDSManager
 		private readonly ConsoleColor _foldersColor;
 		private readonly ConsoleColor _filesColor;
 		private readonly ConsoleColor _selectedItemColor;
+		private readonly ConsoleColor _backgroundAuxiliaryElementsColor;
+		private readonly ConsoleColor _foregroundAuxiliaryElementsColor;
 
 		private readonly Window _leftWindow;
 		private readonly Window _rightWindow;
@@ -29,6 +32,8 @@ namespace SDSManager
 				Нужно поместить обработку ввода в отдельный класс, и сделать всё максимально гибким и расширяемым.
 			*/
 			DrawWindows();
+
+			DrawAuxiliaryElements();
 
 			DrawContent();
 		}
@@ -59,10 +64,78 @@ namespace SDSManager
 				return _leftWindow;
 		}
 
+		private void DrawAuxiliaryElements()
+		{
+			Console.BackgroundColor = _backgroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _foregroundAuxiliaryElementsColor;
+
+			DrawTime();
+			DrawBottomHelp();
+
+			Console.ResetColor();
+		}
+
 		private void DrawWindows()
 		{
 			DrawWindowBorder(_leftWindow);
 			DrawWindowBorder(_rightWindow);
+		}
+
+		private void DrawBottomHelp()
+		{
+			Console.SetCursorPosition(0, Console.WindowHeight - 2);
+
+			string content = " " + Environment.CurrentDirectory + " ";
+			int padding = (Console.WindowWidth - content.Length) / 2;
+			string space = new string('\u2592', padding);
+
+			Console.BackgroundColor = _foregroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _backgroundAuxiliaryElementsColor;
+			Console.Write(space);
+			Console.BackgroundColor = _backgroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _foregroundAuxiliaryElementsColor;
+
+			Console.Write(content);
+
+			Console.BackgroundColor = _foregroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _backgroundAuxiliaryElementsColor;
+			Console.Write(space);
+			Console.BackgroundColor = _backgroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _foregroundAuxiliaryElementsColor;
+
+			Console.SetCursorPosition(0, Console.WindowHeight - 1);
+
+			content = " LEFT ARROW/BACKSPACE - cancel or exit    |    RIGHT ARROW/ENTER - open or read ";
+
+			padding = (Console.WindowWidth - content.Length) / 2;
+			space = new string('\u2591', padding);
+
+			Console.BackgroundColor = _foregroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _backgroundAuxiliaryElementsColor;
+			Console.Write(space);
+			Console.BackgroundColor = _backgroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _foregroundAuxiliaryElementsColor;
+
+			Console.Write(content);
+
+			Console.BackgroundColor = _foregroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _backgroundAuxiliaryElementsColor;
+			Console.Write(space);
+			Console.BackgroundColor = _backgroundAuxiliaryElementsColor;
+			Console.ForegroundColor = _foregroundAuxiliaryElementsColor;
+		}
+
+		private void DrawTime()
+		{
+			Console.SetCursorPosition(0, 0);
+
+			string OSversion = Environment.OSVersion.VersionString;
+			string userName = Environment.UserName;
+			string currentTime = DateTime.Now.ToString("hh:mm tt");
+
+			int spacesCount = Console.WindowWidth - (OSversion.Length + userName.Length + 4) - currentTime.Length;
+
+			Console.Write($"{userName} | {OSversion}" + new string(' ', spacesCount) + currentTime + " ");
 		}
 
 		private string Title(Window window)
@@ -121,7 +194,13 @@ namespace SDSManager
 			Console.ResetColor();
 		}
 
-		public Render(ConsoleColor windowsBordersColor, ConsoleColor windowsBackgroundColor, ConsoleColor selectedItemColor, ConsoleColor foldersColor, ConsoleColor filesColor)
+		public Render(ConsoleColor windowsBordersColor, 
+			ConsoleColor windowsBackgroundColor, 
+			ConsoleColor selectedItemColor, 
+			ConsoleColor foldersColor, 
+			ConsoleColor filesColor,
+			ConsoleColor backgroundAuxiliaryElementsColor,
+			ConsoleColor foregroundAuxiliaryElementsColor)
 		{
 			int windowsHeight = Console.WindowHeight - 5;
 			int windowWidth = Console.WindowWidth / 2;
@@ -140,6 +219,7 @@ namespace SDSManager
 			_selectedItemColor = selectedItemColor;
 			_foldersColor = foldersColor;
 			_filesColor = filesColor;
+			_backgroundAuxiliaryElementsColor = backgroundAuxiliaryElementsColor;
 		}
 	}
 }
