@@ -13,7 +13,7 @@ namespace SDSManager
 		private string _title;
 		public string Title
 		{
-			get { return _title; }
+			get => _title;
 			set
 			{
 				if (value == null || value.Length <= 1)
@@ -27,7 +27,7 @@ namespace SDSManager
 		private int _width;
 		public int Width
 		{
-			get { return _width; }
+			get => _width;
 			set
 			{
 				if (value <= 1) throw new ArgumentException("value");
@@ -39,7 +39,7 @@ namespace SDSManager
 
 		public int Height
 		{
-			get { return _height; }
+			get => _height;
 			set
 			{
 				if (value <= 1) throw new ArgumentException("value");
@@ -53,7 +53,7 @@ namespace SDSManager
 		private int _leftPadding;
 		public int LeftPadding
 		{
-			get { return _leftPadding; }
+			get => _leftPadding;
 			set
 			{
 				if (value < 1) throw new ArgumentException("value");
@@ -67,7 +67,7 @@ namespace SDSManager
 		private int _topPadding;
 		public int TopPadding
 		{
-			get { return _topPadding; }
+			get => _topPadding;
 			set
 			{
 				if (value < 1) throw new ArgumentException("value");
@@ -88,7 +88,8 @@ namespace SDSManager
 		/// <summary>
 		/// The content displayed in the window, in string[] format
 		/// </summary>
-		public string[] Content { get; private set; }
+		public string[] Content { get; set; }
+		public int Selected
 
 		public Window(int width, int height, int leftPadding, int topPadding)
 		{
@@ -99,9 +100,7 @@ namespace SDSManager
 
 			Content = new string[Width * Height];
 
-			//TODO:
-			CurrentDirectory = new DirectoryInfo(Environment.GetLogicalDrives()[0]); // TEMP
-			//SelectedFile = new FileInfo();
+			CurrentDirectory = new DirectoryInfo(Environment.GetLogicalDrives()[0]);
 
 			PrevDirectories = new List<DirectoryInfo>();
 		}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Net;
+using System.Net.Mime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -24,6 +25,55 @@ namespace SDSManager
 		private readonly Window _leftWindow;
 		private readonly Window _rightWindow;
 
+		public void ProcessAction(ActionType actionType)
+		{
+			if (actionType == ActionType.None)
+			{
+				return;
+			}
+			else if (actionType == ActionType.Open)
+			{
+				Window window = GetWindowByContentType(WindowContentType.Directory);
+
+				if (window.SelectedFolder != null)
+				{
+					window.PrevDirectories.Add(window.CurrentDirectory);
+					window.CurrentDirectory = window.SelectedFolder;
+					window.Content = GetDirectoryContent(window.CurrentDirectory);
+				}else if (window.SelectedFile != null)
+				{
+					Window otherWindow = GetOtherWindow(window);
+					if (window.SelectedFile.Extension == ".txt")
+					{
+						otherWindow.ContentType = WindowContentType.TextView;
+						otherWindow.Content = GetFileContent(window.SelectedFile);
+					}
+				}
+				else
+				{
+					throw new NotImplementedException();
+				}
+			}
+			else if (actionType == ActionType.Cancel)
+			{
+				Window window = GetWindowByContentType(WindowContentType.Directory);
+
+				if (window.PrevDirectories.Count > 0)
+				{
+					window.CurrentDirectory = window.PrevDirectories.Last();
+					window.PrevDirectories.RemoveAt(window.PrevDirectories.Count - 1);
+					window.Content = GetDirectoryContent(window.CurrentDirectory);
+				}
+				else
+				{
+					throw new NotImplementedException();
+				}
+			}else if (actionType == ActionType.Down)
+			{
+
+			}
+		}
+
 		public void Draw()
 		{
 			Console.Clear();
@@ -40,7 +90,7 @@ namespace SDSManager
 
 		private void DrawContent()
 		{
-			Window[] windows = new Window[2] { _leftWindow, _rightWindow };
+			Window[] windows = new Window[] { _leftWindow, _rightWindow };
 
 			foreach (var window in windows)
 			{
@@ -50,18 +100,43 @@ namespace SDSManager
 			}
 		}
 
-		private void DrawWindowsContent(Window window)
+		private void DrawWindowsContent(in Window window)
 		{
 			
 		}
 
-		private Window GetOtherWindow(Window window)
+		private Window GetOtherWindow(in Window window)
 		{
 			Window otherWindow;
 			if (window == _leftWindow)
 				return _rightWindow;
 			else
 				return _leftWindow;
+		}
+
+		private string[] GetDirectoryContent()
+		{
+			//TODO
+		}
+
+		private string[] GetFileContent()
+		{
+			//TODO
+		}
+
+		private Window GetWindowByContentType(WindowContentType type)
+		{
+			Window[] windows = new Window[] { _leftWindow, _rightWindow };
+
+			foreach (var window in windows)
+			{
+				if (window.ContentType == type)
+				{
+					return window;
+				}
+			}
+
+			throw new NullReferenceException();
 		}
 
 		private void DrawAuxiliaryElements()
@@ -138,7 +213,7 @@ namespace SDSManager
 			Console.Write($"{userName} | {OSversion}" + new string(' ', spacesCount) + currentTime + " ");
 		}
 
-		private string Title(Window window)
+		private string Title(in Window window)
 		{
 			string result = "";
 
@@ -162,7 +237,7 @@ namespace SDSManager
 			return result;
 		}
 
-		private void DrawWindowBorder(Window window) // ║ ╗ ╝ ╔ ═ ╚ 
+		private void DrawWindowBorder(in Window window) // ║ ╗ ╝ ╔ ═ ╚ 
 		{
 			string windowTitle = Title(window);
 
@@ -193,14 +268,14 @@ namespace SDSManager
 			}
 			Console.ResetColor();
 		}
-
-		public Render(ConsoleColor windowsBordersColor, 
-			ConsoleColor windowsBackgroundColor, 
-			ConsoleColor selectedItemColor, 
-			ConsoleColor foldersColor, 
-			ConsoleColor filesColor,
-			ConsoleColor backgroundAuxiliaryElementsColor,
-			ConsoleColor foregroundAuxiliaryElementsColor)
+		
+		public Render(ConsoleColor windowsBordersColor = ConsoleColor.Cyan, 
+			ConsoleColor windowsBackgroundColor = ConsoleColor.DarkBlue, 
+			ConsoleColor selectedItemColor = ConsoleColor.Red, 
+			ConsoleColor foldersColor = ConsoleColor.Yellow, 
+			ConsoleColor filesColor = ConsoleColor.White,
+			ConsoleColor backgroundAuxiliaryElementsColor = ConsoleColor.DarkCyan,
+			ConsoleColor foregroundAuxiliaryElementsColor = ConsoleColor.Black)
 		{
 			int windowsHeight = Console.WindowHeight - 5;
 			int windowWidth = Console.WindowWidth / 2;
@@ -220,6 +295,7 @@ namespace SDSManager
 			_foldersColor = foldersColor;
 			_filesColor = filesColor;
 			_backgroundAuxiliaryElementsColor = backgroundAuxiliaryElementsColor;
+			_foregroundAuxiliaryElementsColor = foregroundAuxiliaryElementsColor;
 		}
 	}
 }
