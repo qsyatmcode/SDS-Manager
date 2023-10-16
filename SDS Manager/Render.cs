@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Net;
@@ -27,50 +28,65 @@ namespace SDSManager
 
 		public void ProcessAction(ActionType actionType)
 		{
+			Window window = GetWindowByContentType(WindowContentType.Directory);
 			if (actionType == ActionType.None)
 			{
 				return;
 			}
 			else if (actionType == ActionType.Open)
 			{
-				Window window = GetWindowByContentType(WindowContentType.Directory);
+				//Window window = GetWindowByContentType(WindowContentType.Directory);
 
 				if (window.SelectedFolder != null)
 				{
-					window.PrevDirectories.Add(window.CurrentDirectory);
+					if (window.CurrentDirectory != null) window.PrevDirectories.Add(window.CurrentDirectory);
 					window.CurrentDirectory = window.SelectedFolder;
-					window.Content = GetDirectoryContent(window.CurrentDirectory);
-				}else if (window.SelectedFile != null)
+					window.ContentObjects = GetDirectoryContent(window.CurrentDirectory);
+				}
+				else if (window.SelectedFile != null)
 				{
 					Window otherWindow = GetOtherWindow(window);
-					if (window.SelectedFile.Extension == ".txt")
-					{
+					//if (window.SelectedFile.Extension == ".txt")
+					//{
 						otherWindow.ContentType = WindowContentType.TextView;
-						otherWindow.Content = GetFileContent(window.SelectedFile);
-					}
-				}
-				else
-				{
-					throw new NotImplementedException();
+						//otherWindow.Content = GetFileContent(window.SelectedFile);
+					//}
 				}
 			}
 			else if (actionType == ActionType.Cancel)
 			{
-				Window window = GetWindowByContentType(WindowContentType.Directory);
+				//Window window = GetWindowByContentType(WindowContentType.Directory);
 
 				if (window.PrevDirectories.Count > 0)
 				{
 					window.CurrentDirectory = window.PrevDirectories.Last();
 					window.PrevDirectories.RemoveAt(window.PrevDirectories.Count - 1);
-					window.Content = GetDirectoryContent(window.CurrentDirectory);
+					window.ContentObjects = GetDirectoryContent(window.CurrentDirectory);
 				}
-				else
-				{
-					throw new NotImplementedException();
-				}
-			}else if (actionType == ActionType.Down)
+			}
+			else if (actionType == ActionType.Down)
 			{
+				window.SelectedObjectIndex++;
+				ChangeSelected();
+			}
+			else if (actionType == ActionType.Up)
+			{
+				window.SelectedObjectIndex--;
+				ChangeSelected();
+			}
 
+			void ChangeSelected()
+			{
+				if (window.ContentObjects[window.SelectedObjectIndex] is DirectoryInfo)
+				{
+					window.SelectedFile = null;
+					window.SelectedFolder = window.ContentObjects[window.SelectedObjectIndex] as DirectoryInfo;
+				}
+				else if (window.ContentObjects[window.SelectedObjectIndex] is FileInfo)
+				{
+					window.SelectedFolder = null;
+					window.SelectedFile = window.ContentObjects[window.SelectedObjectIndex] as FileInfo;
+				}
 			}
 		}
 
@@ -95,12 +111,12 @@ namespace SDSManager
 			foreach (var window in windows)
 			{
 				
-				DrawWindowsContent(window);
+				DrawWindowContent(window);
 				
 			}
 		}
 
-		private void DrawWindowsContent(in Window window)
+		private void DrawWindowContent(in Window window)
 		{
 			
 		}
@@ -114,15 +130,30 @@ namespace SDSManager
 				return _leftWindow;
 		}
 
-		private string[] GetDirectoryContent()
+		private object[] GetDirectoryContent(DirectoryInfo directory)
 		{
-			//TODO
+			DirectoryInfo[] dirs = directory.GetDirectories();
+			FileInfo[] files = directory.GetFiles();
+			
+			object[] result = new object[dirs.Length + files.Length];
+
+			for (int i = 0; i < dirs.Length; i++)
+			{
+				result[i] = dirs[i];
+			}
+
+			for (int i = 0; i < files.Length; i++)
+			{
+				result[i + dirs.Length] = files[i];
+			}
+
+			return result;
 		}
 
-		private string[] GetFileContent()
-		{
-			//TODO
-		}
+		//private string[] GetFileContent(FileInfo file)
+		//{
+			
+		//}
 
 		private Window GetWindowByContentType(WindowContentType type)
 		{
@@ -180,7 +211,7 @@ namespace SDSManager
 
 			Console.SetCursorPosition(0, Console.WindowHeight - 1);
 
-			content = " LEFT ARROW/BACKSPACE - cancel or exit    |    RIGHT ARROW/ENTER - open or read ";
+			content = " LEFT ARROW/BACKSPACE - cancel or exit    |    RIGHT ARROW/ENTER - open or read    |    DOWN ARROW - move down    |    UP ARROW - move up ";
 
 			padding = (Console.WindowWidth - content.Length) / 2;
 			space = new string('\u2591', padding);
@@ -281,14 +312,14 @@ namespace SDSManager
 			int windowWidth = Console.WindowWidth / 2;
 			
 			_leftWindow = new Window(
-				windowWidth, windowsHeight, 1, 2
+				windowWidth, windowsHeight, 1, 2, WindowContentType.Directory
 				);
 			_rightWindow = new Window(
-				windowWidth, windowsHeight, _leftWindow.LeftPadding + _leftWindow.Width, 2
+				windowWidth, windowsHeight, _leftWindow.LeftPadding + _leftWindow.Width, 2, WindowContentType.FileInfo
 			);
 
-			_leftWindow.ContentType = WindowContentType.Drives;
-			_rightWindow.ContentType = WindowContentType.FileInfo;
+			//_leftWindow.ContentType = WindowContentType.Drives;
+			//_rightWindow.ContentType = WindowContentType.FileInfo;
 			_windowsBordersColor = windowsBordersColor;
 			_windowsBackgroundColor = windowsBackgroundColor;
 			_selectedItemColor = selectedItemColor;

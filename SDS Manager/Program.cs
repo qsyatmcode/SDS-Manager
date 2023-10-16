@@ -9,14 +9,14 @@
 
 			InputHandler inputHandler = new InputHandler(
 				new ConsoleKey[] {ConsoleKey.Enter, ConsoleKey.RightArrow},
-				new ConsoleKey[] {ConsoleKey.Backspace, ConsoleKey.LeftArrow}
+				new ConsoleKey[] {ConsoleKey.Backspace, ConsoleKey.LeftArrow},
+				new ConsoleKey[] { ConsoleKey.UpArrow },
+				new ConsoleKey[] { ConsoleKey.DownArrow }
 				);
 
 			Render render = new Render();
 
 			DirectoryInfo currentDirectory = new DirectoryInfo(Environment.CurrentDirectory);
-
-			ConsoleKey pressedKey = ConsoleKey.A;
 
 			while (true)
 			{
@@ -24,7 +24,6 @@
 
 				render.Draw();
 
-				pressedKey = Console.ReadKey().Key;
 			}
 
 			Console.ReadKey();

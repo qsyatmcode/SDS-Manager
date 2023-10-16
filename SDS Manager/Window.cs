@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -76,9 +77,29 @@ namespace SDSManager
 		}
 
 		public List<DirectoryInfo> PrevDirectories { get; set; }
-		public DirectoryInfo CurrentDirectory { get; set; }
+		public DirectoryInfo? CurrentDirectory { get; set; }
 		public FileInfo? SelectedFile { get; set; }
 		public DirectoryInfo? SelectedFolder { get; set; }
+		public Object[] ContentObjects { get; set; }
+
+		private int _selectedObjectIndex = 0;
+		public int SelectedObjectIndex
+		{
+			get
+			{
+				if (_selectedObjectIndex < 0)
+				{
+					_selectedObjectIndex = ContentObjects.Length - 1;
+					return _selectedObjectIndex;
+				}else if (_selectedObjectIndex >= ContentObjects.Length)
+				{
+					_selectedObjectIndex = 0;
+					return _selectedObjectIndex;
+				}
+				return _selectedObjectIndex;
+			}
+			set => _selectedObjectIndex = value;
+		}
 
 		/// <summary>
 		/// The type of content displayed in the window
@@ -89,9 +110,9 @@ namespace SDSManager
 		/// The content displayed in the window, in string[] format
 		/// </summary>
 		public string[] Content { get; set; }
-		public int Selected
 
-		public Window(int width, int height, int leftPadding, int topPadding)
+
+		public Window(int width, int height, int leftPadding, int topPadding, WindowContentType type)
 		{
 			Width = width;
 			Height = height;
@@ -100,9 +121,19 @@ namespace SDSManager
 
 			Content = new string[Width * Height];
 
-			CurrentDirectory = new DirectoryInfo(Environment.GetLogicalDrives()[0]);
+			ContentType = type;
+
+			CurrentDirectory = new DirectoryInfo(Environment.GetLogicalDrives()[0]); // TEMP
 
 			PrevDirectories = new List<DirectoryInfo>();
+
+			var drives = Environment.GetLogicalDrives();
+
+			ContentObjects = new Object[drives.Length];
+			for (int i = 0; i < ContentObjects.Length; i++)
+			{
+				ContentObjects[i] = new DirectoryInfo(drives[i]);
+			}
 		}
 	}
 }
