@@ -80,7 +80,7 @@ namespace SDSManager
 		public DirectoryInfo? CurrentDirectory { get; set; }
 		public FileInfo? SelectedFile { get; set; }
 		public DirectoryInfo? SelectedFolder { get; set; }
-		public Object[] ContentObjects { get; set; }
+		public object[] ContentObjects { get; set; }
 
 		private int _selectedObjectIndex = 0;
 		public int SelectedObjectIndex

@@ -94,9 +94,6 @@ namespace SDSManager
 		{
 			Console.Clear();
 			
-			/* TODO: РАЗДЕЛИТЬ ВВОД (ОБРАБОТКА НАЖАТОЙ КЛАВИШИ И ПОСЛЕДЮЩИЕ ДЕЙСТВИЯ) И ВЫВОД (МЕТОДЫ С ПРИСТАВКОЙ DRAW)
-				Нужно поместить обработку ввода в отдельный класс, и сделать всё максимально гибким и расширяемым.
-			*/
 			DrawWindows();
 
 			DrawAuxiliaryElements();
@@ -116,9 +113,162 @@ namespace SDSManager
 			}
 		}
 
-		private void DrawWindowContent(in Window window)
+		private void DrawWindowContent(Window window)
 		{
-			
+			int creationDateWidth = 12;
+			int procentWidth = 5;
+			int titleWidth = window.Width - creationDateWidth - procentWidth;
+
+			int leftPadding = window.LeftPadding;
+			int topPos = window.TopPadding;
+
+			Console.BackgroundColor = _windowsBackgroundColor;
+			for (int i = 0; i < window.ContentObjects.Length; i++)
+			{
+				if (topPos >= window.Height + window.TopPadding)
+					break; // out of window borders
+
+				if (i == window.SelectedObjectIndex)
+				{
+					Console.ForegroundColor = _selectedItemColor;
+					DrawObject(window.ContentObjects[i]);
+				}else if (window.ContentObjects[i] is DirectoryInfo)
+				{
+					Console.ForegroundColor = _foldersColor;
+					DrawObject(window.ContentObjects[i]);
+				}
+				else if (window.ContentObjects[i] is FileInfo)
+				{
+					Console.ForegroundColor = _filesColor;
+					DrawObject(window.ContentObjects[i]);
+				}
+				
+				topPos++;
+			}
+
+
+
+			void DrawObject(object obj)
+			{
+				int procent = 99; //(int)GetProcentOfParentDirSize(); // there may be data loss and incorrect output
+				DateTime creationTime = GetCreationTime();
+				string title = GetTitle();
+				string creationTimeString = GetDateString();
+
+				Console.SetCursorPosition(leftPadding, topPos);
+				Console.Write(title);
+				WriteBorder();
+				Console.Write(creationTimeString);
+				WriteBorder();
+				Console.Write($"{procent}%");
+
+				void WriteBorder()
+				{
+					ConsoleColor prevColor = Console.ForegroundColor;
+					Console.ForegroundColor = _windowsBordersColor;
+					Console.Write("\u2502");
+					Console.ForegroundColor = prevColor;
+				}
+
+				string GetDateString()
+				{
+					return creationTime.ToString("MM/dd/yyyy");
+				}
+				string GetTitle()
+				{
+					if (obj is DirectoryInfo)
+					{
+						DirectoryInfo drawing = (DirectoryInfo)obj;
+						if (drawing.Name.Length > titleWidth)
+							return drawing.Name.Substring(0, titleWidth);
+						else
+							return drawing.Name + new string(' ', titleWidth - drawing.Name.Length);
+					}
+					else if (obj is FileInfo)
+					{
+						FileInfo drawing = (FileInfo)obj;
+						if (drawing.Name.Length > titleWidth)
+							return drawing.Name.Substring(0, titleWidth);
+						else
+							return drawing.Name;
+					}
+					else
+					{
+						throw new ArgumentException();
+					}
+				}
+				DateTime GetCreationTime()
+				{
+					if (obj is DirectoryInfo)
+					{
+						return (obj as DirectoryInfo).CreationTime;
+
+					}
+					else if (obj is FileInfo)
+					{
+						return (obj as FileInfo).CreationTime;
+					}
+					else
+					{
+						throw new ArgumentException();
+					}
+				}
+				long GetProcentOfParentDirSize()
+				{
+					if (obj is DirectoryInfo)
+					{
+						DirectoryInfo drawingDirectory = obj as DirectoryInfo;
+						DirectoryInfo parent = drawingDirectory.Parent;
+						if (parent == null)
+							return 0;
+						long parentSize = DirSize(parent);
+						long drawingDirectorySize = DirSize(drawingDirectory);
+						return (drawingDirectorySize / parentSize) * 100;
+
+					}
+					else if (obj is FileInfo)
+					{
+						FileInfo drawingFile = obj as FileInfo;
+						DirectoryInfo parent = new DirectoryInfo(GetParentFolderName(drawingFile.FullName));
+						if (parent == null)
+							return 0;
+						long parentSize = DirSize(parent);
+						long drawingFileSize = drawingFile.Length;
+						return (drawingFileSize / parentSize) * 100;
+					}
+					else
+					{
+						throw new ArgumentException();
+					}
+				}
+				string GetParentFolderName(string fullFileName)
+				{
+					int pos = fullFileName.LastIndexOf(@"\");
+					return fullFileName.Substring(0, pos); // without last slash
+				}
+
+				long DirSize(DirectoryInfo directory)
+				{
+					long size = 0;
+
+					FileInfo[] fis = directory.GetFiles();
+					foreach (FileInfo fi in fis)
+					{ 
+						size += fi.Length;
+					}
+
+					DirectoryInfo[] dis = directory.GetDirectories();
+					foreach (DirectoryInfo di in dis)
+					{
+						try
+						{
+							size += DirSize(di);
+						}catch { }
+					}
+
+					return size;
+				}
+			}
 		}
 
 		private Window GetOtherWindow(in Window window)
