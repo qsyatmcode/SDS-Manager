@@ -29,6 +29,7 @@ namespace SDSManager
 		public void ProcessAction(ActionType actionType)
 		{
 			Window window = GetWindowByContentType(WindowContentType.Directory);
+			ChangeSelected();
 			if (actionType == ActionType.None)
 			{
 				return;
@@ -42,6 +43,7 @@ namespace SDSManager
 					if (window.CurrentDirectory != null) window.PrevDirectories.Add(window.CurrentDirectory);
 					window.CurrentDirectory = window.SelectedFolder;
 					window.ContentObjects = GetDirectoryContent(window.CurrentDirectory);
+					ChangeSelected();
 				}
 				else if (window.SelectedFile != null)
 				{
@@ -77,7 +79,13 @@ namespace SDSManager
 
 			void ChangeSelected()
 			{
-				if (window.ContentObjects[window.SelectedObjectIndex] is DirectoryInfo)
+				if (window.ContentObjects.Length <= 0)
+				{
+					window.SelectedFolder = null;
+					window.SelectedFile = null;
+					return;
+				} 
+				else if (window.ContentObjects[window.SelectedObjectIndex] is DirectoryInfo)
 				{
 					window.SelectedFile = null;
 					window.SelectedFolder = window.ContentObjects[window.SelectedObjectIndex] as DirectoryInfo;
@@ -123,6 +131,12 @@ namespace SDSManager
 			int topPos = window.TopPadding;
 
 			Console.BackgroundColor = _windowsBackgroundColor;
+
+			if (window.ContentObjects.Length <= 0)
+			{
+				EmptyFolderFill();
+			}
+
 			for (int i = 0; i < window.ContentObjects.Length; i++)
 			{
 				if (topPos >= window.Height + window.TopPadding)
@@ -147,10 +161,18 @@ namespace SDSManager
 			}
 
 
-
+			void EmptyFolderFill()
+			{
+				Console.ForegroundColor = _foldersColor;
+				string sign = "EMPTY FOLDER";
+				int topMiddle = topPos + (window.Height / 2);
+				int leftMiddle = leftPadding + (window.Width / 2) - (sign.Length / 2);
+				Console.SetCursorPosition(leftMiddle, topMiddle);
+				Console.Write(sign);
+			}
 			void DrawObject(object obj)
 			{
-				int procent = 99; //(int)GetProcentOfParentDirSize(); // there may be data loss and incorrect output
+				int procent = 0; //(int)GetProcentOfParentDirSize(); // there may be data loss and incorrect output
 				DateTime creationTime = GetCreationTime();
 				string title = GetTitle();
 				string creationTimeString = GetDateString();
@@ -247,28 +269,85 @@ namespace SDSManager
 					return fullFileName.Substring(0, pos); // without last slash
 				}
 
-				long DirSize(DirectoryInfo directory)
-				{
-					long size = 0;
+				//long DirSize(DirectoryInfo directory)
+				//{
+				//	long size = 0;
 
-					FileInfo[] fis = directory.GetFiles();
-					foreach (FileInfo fi in fis)
-					{ 
-						size += fi.Length;
-					}
+				//	FileInfo[] fis;
+				//	try
+				//	{
+				//		fis = directory.GetFiles();
+				//		foreach (FileInfo fi in fis)
+				//		{
+				//			size += fi.Length;
+				//		}
+				//	}
+				//	catch
+				//	{
+				//		return size;
+				//	}
 
-					DirectoryInfo[] dis = directory.GetDirectories();
-					foreach (DirectoryInfo di in dis)
-					{
-						try
-						{
-							size += DirSize(di);
-						}catch { }
-					}
+				//	try
+				//	{
+				//		DirectoryInfo[] dis = directory.GetDirectories();
+				//		foreach (DirectoryInfo di in dis)
+				//		{
+				//			size += DirSize(di);
+				//		}
+				//	}
+				//	catch
+				//	{
+				//		return size;
+				//	}
 
-					return size;
-				}
+				//	return size;
+				//}
 			}
+		}
+
+		private long DirSize(DirectoryInfo directory)
+		{
+			long size = 0;
+
+			FileInfo[] fis = null;
+			try
+			{
+				fis = directory.GetFiles();
+				//foreach (FileInfo fi in fis)
+				//{
+				//	size += fi.Length;
+				//}
+			}
+			catch
+			{
+				return size;
+			}
+
+			foreach (FileInfo fi in fis)
+			{
+				size += fi.Length;
+			}
+
+			//DirectoryInfo[] dis = null;
+			//try
+			//{
+			//	dis = directory.GetDirectories();
+			//	//foreach (DirectoryInfo di in dis)
+			//	//{
+			//	//	size += DirSize(di);
+			//	//}
+			//}
+			//catch
+			//{
+			//	return size;
+			//}
+
+			//foreach (DirectoryInfo di in dis)
+			//{
+			//	size += DirSize(di);
+			//}
+
+			return size;
 		}
 
 		private Window GetOtherWindow(in Window window)
@@ -394,33 +473,38 @@ namespace SDSManager
 			Console.Write($"{userName} | {OSversion}" + new string(' ', spacesCount) + currentTime + " ");
 		}
 
-		private string Title(in Window window)
+		//private string Title(in Window window)
+		//{
+		//	string result = "";
+
+		//	if (window.ContentType == WindowContentType.Directory)
+		//	{
+		//		result = window.CurrentDirectory.FullName;
+		//	}else if (window.ContentType == WindowContentType.FileInfo || window.ContentType == WindowContentType.TextView)
+		//	{
+		//		//TODO:
+		//		//result += window.SelectedFile.Name + " ";
+		//		result += window.ContentType.ToString();
+		//	}
+		//	else
+		//	{
+		//		result += window.ContentType.ToString();
+		//	}
+
+		//	result = result.PadLeft(result.Length + 1);
+		//	result = result.PadRight(result.Length + 1);
+
+		//	if (result.Length % 2 != 0)
+		//	{
+		//		result = result.PadRight(result.Length + 1);
+		//	}
+
+		//	return result;
+		//}
+
+		private void DrawWindowBorder(Window window) // ║ ╗ ╝ ╔ ═ ╚ 
 		{
-			string result = "";
-
-			if (window.ContentType == WindowContentType.Directory)
-			{
-				result = window.CurrentDirectory.FullName;
-			}else if (window.ContentType == WindowContentType.FileInfo || window.ContentType == WindowContentType.TextView)
-			{
-				//TODO:
-				//result += window.SelectedFile.Name + " ";
-				result += window.ContentType.ToString();
-			}
-			else
-			{
-				result += window.ContentType.ToString();
-			}
-
-			result = result.PadLeft(result.Length + 1);
-			result = result.PadRight(result.Length + 1);
-
-			return result;
-		}
-
-		private void DrawWindowBorder(in Window window) // ║ ╗ ╝ ╔ ═ ╚ 
-		{
-			string windowTitle = Title(window);
+			string windowTitle = Title();
 
 			// The loop runs line by line from top to bottom
 			Console.ForegroundColor = _windowsBordersColor;
@@ -438,8 +522,9 @@ namespace SDSManager
 					Console.WriteLine(@"╔" + titleBorder + windowTitle + titleBorder + @"╗");
 				}else if (i == window.Height + window.TopPadding) // The last line
 				{
-					string bottomBorder = new string('\u2550', window.Width - 2);
-					Console.WriteLine(@"╚" + bottomBorder + @"╝");
+					string size = DirSizeStr();
+					string bottomBorder = new string('\u2550', ((window.Width - 2) - size.Length) / 2);
+					Console.WriteLine(@"╚" + bottomBorder + size + bottomBorder + @"╝");
 				}
 				else // any other line in the window
 				{
@@ -448,6 +533,48 @@ namespace SDSManager
 				}
 			}
 			Console.ResetColor();
+
+			string DirSizeStr()
+			{
+				long size = DirSize(new(GetParentFolderName(window.CurrentDirectory.FullName)));
+
+				return new string($" {size:n0} bytes ");
+
+				string GetParentFolderName(string fullFileName)
+				{
+					int pos = fullFileName.LastIndexOf(@"\");
+					return fullFileName.Substring(0, pos + 1); // without last slash
+				}
+			}
+			string Title()
+			{
+				string result = "";
+
+				if (window.ContentType == WindowContentType.Directory)
+				{
+					result = window.CurrentDirectory.FullName;
+				}
+				else if (window.ContentType == WindowContentType.FileInfo || window.ContentType == WindowContentType.TextView)
+				{
+					//TODO:
+					//result += window.SelectedFile.Name + " ";
+					result += window.ContentType.ToString();
+				}
+				else
+				{
+					result += window.ContentType.ToString();
+				}
+
+				result = result.PadLeft(result.Length + 1);
+				result = result.PadRight(result.Length + 1);
+
+				if (result.Length % 2 != 0)
+				{
+					result = result.PadRight(result.Length + 1);
+				}
+
+				return result;
+			}
 		}
 		
 		public Render(ConsoleColor windowsBordersColor = ConsoleColor.Cyan, 

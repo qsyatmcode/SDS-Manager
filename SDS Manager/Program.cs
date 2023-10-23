@@ -20,10 +20,9 @@
 
 			while (true)
 			{
-				render.ProcessAction(inputHandler.Read());
-
 				render.Draw();
 
+				render.ProcessAction(inputHandler.Read());
 			}
 
 			Console.ReadKey();
