@@ -205,7 +205,7 @@ namespace SDSManager
 						throw new ArgumentException();
 					}
 				}
-			}
+			}//
 
 			void FileInfoDraw()
 			{
