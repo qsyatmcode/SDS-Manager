@@ -36,28 +36,27 @@ namespace SDSManager
 			}
 			else if (actionType == ActionType.Open)
 			{
-				//Window window = GetWindowByContentType(WindowContentType.Directory);
+				//Console.Beep(750, 150);
 
 				if (window.SelectedFolder != null)
 				{
 					if (window.CurrentDirectory != null) window.PrevDirectories.Add(window.CurrentDirectory);
 					window.CurrentDirectory = window.SelectedFolder;
 					window.ContentObjects = GetDirectoryContent(window.CurrentDirectory);
-					ChangeSelected();
+					//ChangeSelected();
 				}
 				else if (window.SelectedFile != null)
 				{
 					Window otherWindow = GetOtherWindow(window);
-					//if (window.SelectedFile.Extension == ".txt")
-					//{
-						otherWindow.ContentType = WindowContentType.TextView;
-						//otherWindow.Content = GetFileContent(window.SelectedFile);
-					//}
+					otherWindow.ContentType = WindowContentType.TextView;
+					
 				}
+
+				ChangeSelected();
 			}
 			else if (actionType == ActionType.Cancel)
 			{
-				//Window window = GetWindowByContentType(WindowContentType.Directory);
+				//Console.Beep(500, 150);
 
 				if (window.PrevDirectories.Count > 0)
 				{
@@ -68,17 +67,21 @@ namespace SDSManager
 			}
 			else if (actionType == ActionType.Down)
 			{
+				//Console.Beep(800, 100);
 				window.SelectedObjectIndex++;
 				ChangeSelected();
 			}
 			else if (actionType == ActionType.Up)
 			{
+				//Console.Beep(800, 100);
 				window.SelectedObjectIndex--;
 				ChangeSelected();
 			}
 
 			void ChangeSelected()
 			{
+				GetOtherWindow(window).ContentType = WindowContentType.FileInfo;
+
 				if (window.ContentObjects.Length <= 0)
 				{
 					window.SelectedFolder = null;
@@ -121,14 +124,30 @@ namespace SDSManager
 			}
 		}
 
-		private void DrawWindowContent(Window window)
+		private void DrawWindowContent(Window window) // TODO: replace this extreme shitcode to Strategy pattern
 		{
-			int creationDateWidth = 12;
-			int procentWidth = 5;
-			int titleWidth = window.Width - creationDateWidth - procentWidth;
-
 			int leftPadding = window.LeftPadding;
 			int topPos = window.TopPadding;
+
+			if (window.ContentType == WindowContentType.FileInfo)
+			{
+				Console.ForegroundColor = _filesColor;
+
+				FileInfoDraw();
+
+				return;
+			} else if (window.ContentType == WindowContentType.TextView)
+			{
+				Console.ForegroundColor = _filesColor;
+				
+				TextViewDraw();
+
+				return;
+			}
+
+			int creationDateWidth = 12;
+			int procentWidth = 3;
+			int titleWidth = window.Width - creationDateWidth - procentWidth;
 
 			Console.BackgroundColor = _windowsBackgroundColor;
 
@@ -172,17 +191,14 @@ namespace SDSManager
 			}
 			void DrawObject(object obj)
 			{
-				int procent = 0; //(int)GetProcentOfParentDirSize(); // there may be data loss and incorrect output
+				int procent = 0;
 				DateTime creationTime = GetCreationTime();
 				string title = GetTitle();
 				string creationTimeString = GetDateString();
 
 				Console.SetCursorPosition(leftPadding, topPos);
 				Console.Write(title);
-				WriteBorder();
 				Console.Write(creationTimeString);
-				WriteBorder();
-				Console.Write($"{procent}%");
 
 				void WriteBorder()
 				{
@@ -198,21 +214,19 @@ namespace SDSManager
 				}
 				string GetTitle()
 				{
-					if (obj is DirectoryInfo)
+					if (obj is DirectoryInfo drawingDirectory)
 					{
-						DirectoryInfo drawing = (DirectoryInfo)obj;
-						if (drawing.Name.Length > titleWidth)
-							return drawing.Name.Substring(0, titleWidth);
+						if (drawingDirectory.Name.Length > titleWidth)
+							return drawingDirectory.Name.Substring(0, titleWidth);
 						else
-							return drawing.Name + new string(' ', titleWidth - drawing.Name.Length);
+							return drawingDirectory.Name + new string(' ', titleWidth - drawingDirectory.Name.Length);
 					}
-					else if (obj is FileInfo)
+					else if (obj is FileInfo drawingFile)
 					{
-						FileInfo drawing = (FileInfo)obj;
-						if (drawing.Name.Length > titleWidth)
-							return drawing.Name.Substring(0, titleWidth);
+						if (drawingFile.Name.Length > titleWidth)
+							return drawingFile.Name.Substring(0, titleWidth);
 						else
-							return drawing.Name;
+							return drawingFile.Name + new string(' ', titleWidth - drawingFile.Name.Length);
 					}
 					else
 					{
@@ -221,87 +235,57 @@ namespace SDSManager
 				}
 				DateTime GetCreationTime()
 				{
-					if (obj is DirectoryInfo)
+					if (obj is DirectoryInfo drawingDirectory)
 					{
-						return (obj as DirectoryInfo).CreationTime;
+						return drawingDirectory.CreationTime;
 
 					}
-					else if (obj is FileInfo)
+					else if (obj is FileInfo drawingFile)
 					{
-						return (obj as FileInfo).CreationTime;
-					}
-					else
-					{
-						throw new ArgumentException();
-					}
-				}
-				long GetProcentOfParentDirSize()
-				{
-					if (obj is DirectoryInfo)
-					{
-						DirectoryInfo drawingDirectory = obj as DirectoryInfo;
-						DirectoryInfo parent = drawingDirectory.Parent;
-						if (parent == null)
-							return 0;
-						long parentSize = DirSize(parent);
-						long drawingDirectorySize = DirSize(drawingDirectory);
-						return (drawingDirectorySize / parentSize) * 100;
-
-					}
-					else if (obj is FileInfo)
-					{
-						FileInfo drawingFile = obj as FileInfo;
-						DirectoryInfo parent = new DirectoryInfo(GetParentFolderName(drawingFile.FullName));
-						if (parent == null)
-							return 0;
-						long parentSize = DirSize(parent);
-						long drawingFileSize = drawingFile.Length;
-						return (drawingFileSize / parentSize) * 100;
+						return drawingFile.CreationTime;
 					}
 					else
 					{
 						throw new ArgumentException();
 					}
 				}
-				string GetParentFolderName(string fullFileName)
+			}
+
+			void FileInfoDraw()
+			{
+				Window otherWindow = GetOtherWindow(window);
+				string fileName = otherWindow.SelectedFile == null ? 
+					otherWindow.SelectedFolder?.Name ?? "NO INFO" : otherWindow.SelectedFile?.Name ?? "NO INFO";
+				long size = otherWindow.SelectedFile?.Length ?? 0;
+
+				Console.SetCursorPosition(leftPadding, topPos + 10);
+				Console.Write(new string(' ', ((window.Width - 2) - fileName.Length) / 2) + fileName);
+
+				Console.SetCursorPosition(leftPadding, topPos + 12);
+				Console.Write(new string(' ', ((window.Width - 2) - (size.ToString().Length + 6)) / 2) + $"{size:n0} bytes");
+			}
+
+			void TextViewDraw()
+			{
+				string fileName = GetOtherWindow(window).SelectedFile.Name;
+				string[] content = File.ReadAllLines(GetOtherWindow(window).SelectedFile?.FullName ?? "NO INFO");
+				
+				Console.SetCursorPosition(leftPadding, topPos);
+				Console.Write(new string(' ', (window.Width - fileName.Length) / 2) + $" {fileName} ");
+				topPos++;
+				foreach (var line in content)
 				{
-					int pos = fullFileName.LastIndexOf(@"\");
-					return fullFileName.Substring(0, pos); // without last slash
+					if (topPos >= window.TopPadding + window.Height)
+						break;
+					Console.SetCursorPosition(leftPadding, topPos);
+
+					if(line.Length > window.Width)
+						Console.WriteLine(line.Remove(window.Width - 1));
+					else
+						Console.WriteLine(line);
+
+					topPos++;
 				}
-
-				//long DirSize(DirectoryInfo directory)
-				//{
-				//	long size = 0;
-
-				//	FileInfo[] fis;
-				//	try
-				//	{
-				//		fis = directory.GetFiles();
-				//		foreach (FileInfo fi in fis)
-				//		{
-				//			size += fi.Length;
-				//		}
-				//	}
-				//	catch
-				//	{
-				//		return size;
-				//	}
-
-				//	try
-				//	{
-				//		DirectoryInfo[] dis = directory.GetDirectories();
-				//		foreach (DirectoryInfo di in dis)
-				//		{
-				//			size += DirSize(di);
-				//		}
-				//	}
-				//	catch
-				//	{
-				//		return size;
-				//	}
-
-				//	return size;
-				//}
 			}
 		}
 
@@ -313,10 +297,6 @@ namespace SDSManager
 			try
 			{
 				fis = directory.GetFiles();
-				//foreach (FileInfo fi in fis)
-				//{
-				//	size += fi.Length;
-				//}
 			}
 			catch
 			{
@@ -327,25 +307,6 @@ namespace SDSManager
 			{
 				size += fi.Length;
 			}
-
-			//DirectoryInfo[] dis = null;
-			//try
-			//{
-			//	dis = directory.GetDirectories();
-			//	//foreach (DirectoryInfo di in dis)
-			//	//{
-			//	//	size += DirSize(di);
-			//	//}
-			//}
-			//catch
-			//{
-			//	return size;
-			//}
-
-			//foreach (DirectoryInfo di in dis)
-			//{
-			//	size += DirSize(di);
-			//}
 
 			return size;
 		}
@@ -378,11 +339,6 @@ namespace SDSManager
 
 			return result;
 		}
-
-		//private string[] GetFileContent(FileInfo file)
-		//{
-			
-		//}
 
 		private Window GetWindowByContentType(WindowContentType type)
 		{
@@ -473,35 +429,6 @@ namespace SDSManager
 			Console.Write($"{userName} | {OSversion}" + new string(' ', spacesCount) + currentTime + " ");
 		}
 
-		//private string Title(in Window window)
-		//{
-		//	string result = "";
-
-		//	if (window.ContentType == WindowContentType.Directory)
-		//	{
-		//		result = window.CurrentDirectory.FullName;
-		//	}else if (window.ContentType == WindowContentType.FileInfo || window.ContentType == WindowContentType.TextView)
-		//	{
-		//		//TODO:
-		//		//result += window.SelectedFile.Name + " ";
-		//		result += window.ContentType.ToString();
-		//	}
-		//	else
-		//	{
-		//		result += window.ContentType.ToString();
-		//	}
-
-		//	result = result.PadLeft(result.Length + 1);
-		//	result = result.PadRight(result.Length + 1);
-
-		//	if (result.Length % 2 != 0)
-		//	{
-		//		result = result.PadRight(result.Length + 1);
-		//	}
-
-		//	return result;
-		//}
-
 		private void DrawWindowBorder(Window window) // ║ ╗ ╝ ╔ ═ ╚ 
 		{
 			string windowTitle = Title();
@@ -522,9 +449,17 @@ namespace SDSManager
 					Console.WriteLine(@"╔" + titleBorder + windowTitle + titleBorder + @"╗");
 				}else if (i == window.Height + window.TopPadding) // The last line
 				{
-					string size = DirSizeStr();
-					string bottomBorder = new string('\u2550', ((window.Width - 2) - size.Length) / 2);
-					Console.WriteLine(@"╚" + bottomBorder + size + bottomBorder + @"╝");
+					if (window.ContentType == WindowContentType.Directory)
+					{
+						string size = DirSizeStr();
+						string bottomBorder = new string('\u2550', ((window.Width - 2) - size.Length) / 2);
+						Console.WriteLine(@"╚" + bottomBorder + size + bottomBorder + @"╝");
+					}
+					else
+					{
+						string bottomBorder = new string('\u2550', (window.Width - 2));
+						Console.WriteLine(@"╚" + bottomBorder + @"╝");
+					}
 				}
 				else // any other line in the window
 				{
