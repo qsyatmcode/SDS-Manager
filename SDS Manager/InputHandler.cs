@@ -6,58 +6,45 @@ using System.Threading.Tasks;
 
 namespace SDSManager
 {
-	enum ActionType
-	{
-		Open,
-		Cancel,
-		Up,
-		Down,
-		None
-	}
+	//enum ActionType
+	//{
+	//	Open,
+	//	Cancel,
+	//	Up,
+	//	Down,
+	//	None
+	//}
 
 	class InputHandler
 	{
-		private readonly ConsoleKey[] _openKeys;
-		private readonly ConsoleKey[] _cancelKeys;
-		private readonly ConsoleKey[] _upKeys;
-		private readonly ConsoleKey[] _downKeys;
+		private readonly OpenAction _openAction;
+		private readonly CancelAction _cancelAction;
+		private readonly UpAction _upAction;
+		private readonly DownAction _downAction;
+		private readonly NoneAction _noneAction;
 
-		private readonly Dictionary<ConsoleKey[], ActionType> _keyType;
 
-		public ActionType Read()
+		public Action Read()
 		{
 			ConsoleKey pressedKey = Console.ReadKey().Key;
 
-			var types = new[] { _openKeys, _cancelKeys, _upKeys, _downKeys};
+			Action[] actionArray = new Action[] {_openAction, _cancelAction, _downAction, _upAction, _noneAction};
 
-			foreach (var type in types)
+			foreach (var action in actionArray)
 			{
-				foreach (var key in type)
-				{
-					if (pressedKey == key)
-					{
-						return _keyType[type];
-					}
-				}
+				if(action.HasAKey(pressedKey)) return action;
 			}
 
-			return ActionType.None;
+			return _noneAction;
 		}
 
-		public InputHandler(ConsoleKey[] openKeys, ConsoleKey[] cancelKeys, ConsoleKey[] upKeys, ConsoleKey[] downKeys)
+		public InputHandler(ConsoleKey[] OpenKeys, ConsoleKey[] CancelKeys, ConsoleKey[] UpKeys, ConsoleKey[] DownKeys)
 		{
-			_openKeys = openKeys;
-			_cancelKeys = cancelKeys;
-			_upKeys = upKeys;
-			_downKeys = downKeys;
-
-			_keyType = new Dictionary<ConsoleKey[], ActionType>
-			{
-				[_openKeys] = ActionType.Open,
-				[_cancelKeys] = ActionType.Cancel,
-				[_upKeys] = ActionType.Up,
-				[_downKeys] = ActionType.Down
-			};
+			_openAction = new OpenAction(OpenKeys);
+			_cancelAction = new CancelAction(CancelKeys);
+			_upAction = new UpAction(UpKeys);
+			_downAction = new DownAction(DownKeys);
+			_noneAction = new NoneAction();
 		}
 	}
 }
