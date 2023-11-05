@@ -48,15 +48,6 @@ namespace SDSManager
 
 			return result;
 		}
-
-		//protected Window GetOtherWindow(Window window)
-		//{
-		//	Window otherWindow;
-		//	if (window == _leftWindow)
-		//		return _rightWindow;
-		//	else
-		//		return _leftWindow;
-		//}
 	}
 
 	sealed class NoneAction : Action
@@ -84,7 +75,6 @@ namespace SDSManager
 			else if (window.SelectedFile != null)
 			{
 				otherWindow.ContentType = WindowContentType.TextView;
-
 			}
 		}
 

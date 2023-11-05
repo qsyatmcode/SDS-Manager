@@ -29,14 +29,13 @@ namespace SDSManager
 		public void ProcessAction(Action action)
 		{
 			Window window = GetWindowByContentType(WindowContentType.Directory);
-			//ChangeSelected();
+			GetOtherWindow(window).ContentType = WindowContentType.FileInfo;
 			
 			action.Process(window, GetOtherWindow(window));
 			ChangeSelected();
 
 			void ChangeSelected()
 			{
-				GetOtherWindow(window).ContentType = WindowContentType.FileInfo;
 
 				if (window.ContentObjects.Length <= 0)
 				{
@@ -80,10 +79,14 @@ namespace SDSManager
 			}
 		}
 
-		private void DrawWindowContent(Window window) // TODO: replace this extreme shitcode to Strategy pattern
+		private void DrawWindowContent(Window window)
 		{
 			int leftPadding = window.LeftPadding;
 			int topPos = window.TopPadding;
+
+			int creationDateWidth = 12;
+			int procentWidth = 3;
+			int titleWidth = window.Width - creationDateWidth - procentWidth;
 
 			if (window.ContentType == WindowContentType.FileInfo)
 			{
@@ -99,41 +102,94 @@ namespace SDSManager
 				TextViewDraw();
 
 				return;
+			}else if (window.ContentType == WindowContentType.Directory)
+			{
+				//int creationDateWidth = 12;
+				//int procentWidth = 3;
+				//int titleWidth = window.Width - creationDateWidth - procentWidth;
+
+				Console.BackgroundColor = _windowsBackgroundColor;
+
+				if (window.ContentObjects.Length <= 0)
+				{
+					EmptyFolderFill();
+				}
+
+				int drawObjectsLength = window.Height <= window.ContentObjects.Length ? window.Height : window.ContentObjects.Length;
+
+
+				object[] contentObjectsToDraw = new object[window.Height];
+				if (window.Height - window.SelectedObjectIndex <= 0)
+				{
+					int offset = (int)Math.Abs(offset = window.Height - window.SelectedObjectIndex) + 1;
+
+					Array.Copy(window.ContentObjects, offset, contentObjectsToDraw, 0, drawObjectsLength);
+				}
+				else
+				{
+					Array.Copy(window.ContentObjects, contentObjectsToDraw, drawObjectsLength);
+				}
+
+				//int indexOfSelected = 0;
+				for (int i = 0; i < contentObjectsToDraw.Length; i++)
+				{
+					if (topPos >= window.Height + window.TopPadding)
+						break; // out of window borders
+
+					if (i == window.SelectedObjectIndex || contentObjectsToDraw[i] == window.ContentObjects[window.SelectedObjectIndex])
+					{
+						Console.ForegroundColor = _selectedItemColor;
+						DrawObject(contentObjectsToDraw[i]);
+					}
+					else if (contentObjectsToDraw[i] is DirectoryInfo)
+					{
+						Console.ForegroundColor = _foldersColor;
+						DrawObject(contentObjectsToDraw[i]);
+					}
+					else if (contentObjectsToDraw[i] is FileInfo)
+					{
+						Console.ForegroundColor = _filesColor;
+						DrawObject(contentObjectsToDraw[i]);
+					}
+
+					topPos++;
+					//indexOfSelected++;
+				}
 			}
 
-			int creationDateWidth = 12;
-			int procentWidth = 3;
-			int titleWidth = window.Width - creationDateWidth - procentWidth;
+			//int creationDateWidth = 12;
+			//int procentWidth = 3;
+			//int titleWidth = window.Width - creationDateWidth - procentWidth;
 
-			Console.BackgroundColor = _windowsBackgroundColor;
+			//Console.BackgroundColor = _windowsBackgroundColor;
 
-			if (window.ContentObjects.Length <= 0)
-			{
-				EmptyFolderFill();
-			}
+			//if (window.ContentObjects.Length <= 0)
+			//{
+			//	EmptyFolderFill();
+			//}
 
-			for (int i = 0; i < window.ContentObjects.Length; i++)
-			{
-				if (topPos >= window.Height + window.TopPadding)
-					break; // out of window borders
+			//for (int i = 0; i < window.ContentObjects.Length; i++)
+			//{
+			//	if (topPos >= window.Height + window.TopPadding)
+			//		break; // out of window borders
 
-				if (i == window.SelectedObjectIndex)
-				{
-					Console.ForegroundColor = _selectedItemColor;
-					DrawObject(window.ContentObjects[i]);
-				}else if (window.ContentObjects[i] is DirectoryInfo)
-				{
-					Console.ForegroundColor = _foldersColor;
-					DrawObject(window.ContentObjects[i]);
-				}
-				else if (window.ContentObjects[i] is FileInfo)
-				{
-					Console.ForegroundColor = _filesColor;
-					DrawObject(window.ContentObjects[i]);
-				}
+			//	if (i == window.SelectedObjectIndex)
+			//	{
+			//		Console.ForegroundColor = _selectedItemColor;
+			//		DrawObject(window.ContentObjects[i]);
+			//	}else if (window.ContentObjects[i] is DirectoryInfo)
+			//	{
+			//		Console.ForegroundColor = _foldersColor;
+			//		DrawObject(window.ContentObjects[i]);
+			//	}
+			//	else if (window.ContentObjects[i] is FileInfo)
+			//	{
+			//		Console.ForegroundColor = _filesColor;
+			//		DrawObject(window.ContentObjects[i]);
+			//	}
 				
-				topPos++;
-			}
+			//	topPos++;
+			//}
 
 
 			void EmptyFolderFill()
@@ -145,6 +201,7 @@ namespace SDSManager
 				Console.SetCursorPosition(leftMiddle, topMiddle);
 				Console.Write(sign);
 			}
+
 			void DrawObject(object obj)
 			{
 				int procent = 0;
@@ -168,6 +225,7 @@ namespace SDSManager
 				{
 					return creationTime.ToString("MM/dd/yyyy");
 				}
+
 				string GetTitle()
 				{
 					if (obj is DirectoryInfo drawingDirectory)
@@ -189,6 +247,7 @@ namespace SDSManager
 						throw new ArgumentException();
 					}
 				}
+
 				DateTime GetCreationTime()
 				{
 					if (obj is DirectoryInfo drawingDirectory)
@@ -205,7 +264,7 @@ namespace SDSManager
 						throw new ArgumentException();
 					}
 				}
-			}//
+			}
 
 			void FileInfoDraw()
 			{
@@ -245,7 +304,7 @@ namespace SDSManager
 			}
 		}
 
-		private long DirSize(DirectoryInfo directory)
+		private long DirectorySize(DirectoryInfo directory)
 		{
 			long size = 0;
 
@@ -427,7 +486,7 @@ namespace SDSManager
 
 			string DirSizeStr()
 			{
-				long size = DirSize(new(GetParentFolderName(window.CurrentDirectory.FullName)));
+				long size = DirectorySize(new(GetParentFolderName(window.CurrentDirectory.FullName)));
 
 				return new string($" {size:n0} bytes ");
 
