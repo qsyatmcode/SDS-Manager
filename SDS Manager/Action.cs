@@ -31,8 +31,17 @@ namespace SDSManager
 
 		protected object[] GetDirectoryContent(DirectoryInfo directory)
 		{
-			DirectoryInfo[] dirs = directory.GetDirectories();
-			FileInfo[] files = directory.GetFiles();
+			DirectoryInfo[] dirs = null;
+			FileInfo[] files = null;
+			try
+			{
+				dirs = directory.GetDirectories();
+				files = directory.GetFiles();
+			}
+			catch
+			{
+				return Array.Empty<object>();
+			}
 
 			object[] result = new object[dirs.Length + files.Length];
 

@@ -1,11 +1,18 @@
-﻿namespace SDSManager
+﻿using System;
+
+namespace SDSManager
 {
 	internal class Program
 	{
 		static void Main(string[] args)
 		{
-			Console.SetWindowSize(200, 50);
-			Console.SetBufferSize(200, 50);
+			int consoleWidth = 200;
+			int consoleHeight = 50;
+			Console.SetWindowSize(consoleWidth, consoleHeight);
+			Console.SetBufferSize(consoleWidth, consoleHeight);
+
+
+
 
 			InputHandler inputHandler = new InputHandler(
 				new ConsoleKey[] {ConsoleKey.Enter, ConsoleKey.RightArrow},

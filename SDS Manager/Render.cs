@@ -79,7 +79,7 @@ namespace SDSManager
 			}
 		}
 
-		private void DrawWindowContent(Window window)
+		private void DrawWindowContent(Window window) // 150
 		{
 			int leftPadding = window.LeftPadding;
 			int topPos = window.TopPadding;
@@ -104,15 +104,12 @@ namespace SDSManager
 				return;
 			}else if (window.ContentType == WindowContentType.Directory)
 			{
-				//int creationDateWidth = 12;
-				//int procentWidth = 3;
-				//int titleWidth = window.Width - creationDateWidth - procentWidth;
-
 				Console.BackgroundColor = _windowsBackgroundColor;
 
 				if (window.ContentObjects.Length <= 0)
 				{
 					EmptyFolderFill();
+					return;
 				}
 
 				int drawObjectsLength = window.Height <= window.ContentObjects.Length ? window.Height : window.ContentObjects.Length;
@@ -130,7 +127,6 @@ namespace SDSManager
 					Array.Copy(window.ContentObjects, contentObjectsToDraw, drawObjectsLength);
 				}
 
-				//int indexOfSelected = 0;
 				for (int i = 0; i < contentObjectsToDraw.Length; i++)
 				{
 					if (topPos >= window.Height + window.TopPadding)
@@ -153,43 +149,8 @@ namespace SDSManager
 					}
 
 					topPos++;
-					//indexOfSelected++;
 				}
 			}
-
-			//int creationDateWidth = 12;
-			//int procentWidth = 3;
-			//int titleWidth = window.Width - creationDateWidth - procentWidth;
-
-			//Console.BackgroundColor = _windowsBackgroundColor;
-
-			//if (window.ContentObjects.Length <= 0)
-			//{
-			//	EmptyFolderFill();
-			//}
-
-			//for (int i = 0; i < window.ContentObjects.Length; i++)
-			//{
-			//	if (topPos >= window.Height + window.TopPadding)
-			//		break; // out of window borders
-
-			//	if (i == window.SelectedObjectIndex)
-			//	{
-			//		Console.ForegroundColor = _selectedItemColor;
-			//		DrawObject(window.ContentObjects[i]);
-			//	}else if (window.ContentObjects[i] is DirectoryInfo)
-			//	{
-			//		Console.ForegroundColor = _foldersColor;
-			//		DrawObject(window.ContentObjects[i]);
-			//	}
-			//	else if (window.ContentObjects[i] is FileInfo)
-			//	{
-			//		Console.ForegroundColor = _filesColor;
-			//		DrawObject(window.ContentObjects[i]);
-			//	}
-				
-			//	topPos++;
-			//}
 
 
 			void EmptyFolderFill()
@@ -283,8 +244,13 @@ namespace SDSManager
 			void TextViewDraw()
 			{
 				string fileName = GetOtherWindow(window).SelectedFile.Name;
-				string[] content = File.ReadAllLines(GetOtherWindow(window).SelectedFile?.FullName ?? "NO INFO");
-				
+				string[] content = new string[] { "NO INFO" };
+				try
+				{
+					content = File.ReadAllLines(GetOtherWindow(window).SelectedFile?.FullName ?? "NO INFO");
+				}
+				catch { }
+
 				Console.SetCursorPosition(leftPadding, topPos);
 				Console.Write(new string(' ', (window.Width - fileName.Length) / 2) + $" {fileName} ");
 				topPos++;
