@@ -65,16 +65,12 @@ namespace SDSManager
 		{
 			return;
 		}
-
-		public NoneAction() {}
 	}
 
 	sealed class OpenAction : Action
 	{
 		public override void Process(Window window, Window otherWindow)
 		{
-			//Console.Beep(750, 150);
-
 			if (window.SelectedFolder != null)
 			{
 				if (window.CurrentDirectory != null) window.PrevDirectories.Add(window.CurrentDirectory);
@@ -94,8 +90,6 @@ namespace SDSManager
 	{
 		public override void Process(Window window, Window otherWindow)
 		{
-			//Console.Beep(500, 150);
-
 			if (window.PrevDirectories.Count > 0)
 			{
 				window.CurrentDirectory = window.PrevDirectories.Last();

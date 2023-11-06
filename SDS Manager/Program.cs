@@ -6,13 +6,10 @@ namespace SDSManager
 	{
 		static void Main(string[] args)
 		{
-			int consoleWidth = 200;
-			int consoleHeight = 50;
+			short consoleWidth = 200;
+			short consoleHeight = 50;
 			Console.SetWindowSize(consoleWidth, consoleHeight);
 			Console.SetBufferSize(consoleWidth, consoleHeight);
-
-
-
 
 			InputHandler inputHandler = new InputHandler(
 				new ConsoleKey[] {ConsoleKey.Enter, ConsoleKey.RightArrow},
@@ -23,16 +20,12 @@ namespace SDSManager
 
 			Render render = new Render();
 
-			DirectoryInfo currentDirectory = new DirectoryInfo(Environment.CurrentDirectory);
-
 			while (true)
 			{
 				render.Draw();
 
 				render.ProcessAction(inputHandler.Read());
 			}
-
-			Console.ReadKey();
 		}
 	}
 }

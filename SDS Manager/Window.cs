@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mime;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SDSManager
 {
@@ -63,7 +56,7 @@ namespace SDSManager
 		}
 
 		/// <summary>
-		/// indentation on the right taking into account the border
+		/// indentation on the top taking into account the border
 		/// </summary>
 		private int _topPadding;
 		public int TopPadding
@@ -106,20 +99,12 @@ namespace SDSManager
 		/// </summary>
 		public WindowContentType ContentType { get; set; }
 
-		/// <summary>
-		/// The content displayed in the window, in string[] format
-		/// </summary>
-		public string[] Content { get; set; }
-
-
 		public Window(int width, int height, int leftPadding, int topPadding, WindowContentType type)
 		{
 			Width = width;
 			Height = height;
 			LeftPadding = leftPadding;
 			TopPadding = topPadding;
-
-			Content = new string[Width * Height];
 
 			ContentType = type;
 

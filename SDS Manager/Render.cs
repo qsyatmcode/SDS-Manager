@@ -1,15 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
-using System.Net;
-using System.Net.Mime;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
 
 namespace SDSManager
 {
@@ -79,7 +68,7 @@ namespace SDSManager
 			}
 		}
 
-		private void DrawWindowContent(Window window) // 150
+		private void DrawWindowContent(Window window)
 		{
 			int leftPadding = window.LeftPadding;
 			int topPos = window.TopPadding;
@@ -165,7 +154,6 @@ namespace SDSManager
 
 			void DrawObject(object obj)
 			{
-				int procent = 0;
 				DateTime creationTime = GetCreationTime();
 				string title = GetTitle();
 				string creationTimeString = GetDateString();
@@ -173,14 +161,6 @@ namespace SDSManager
 				Console.SetCursorPosition(leftPadding, topPos);
 				Console.Write(title);
 				Console.Write(creationTimeString);
-
-				void WriteBorder()
-				{
-					ConsoleColor prevColor = Console.ForegroundColor;
-					Console.ForegroundColor = _windowsBordersColor;
-					Console.Write("\u2502");
-					Console.ForegroundColor = prevColor;
-				}
 
 				string GetDateString()
 				{
@@ -261,7 +241,7 @@ namespace SDSManager
 					Console.SetCursorPosition(leftPadding, topPos);
 
 					if(line.Length > window.Width)
-						Console.WriteLine(line.Remove(window.Width - 1));
+						Console.WriteLine(line.Remove(window.Width - 2));
 					else
 						Console.WriteLine(line);
 
